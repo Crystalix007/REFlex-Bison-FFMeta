@@ -1,0 +1,19 @@
+LEXER    = reflex
+PARSER   = bison
+CXX      = g++
+CXXFLAGS = -pedantic -std=c++17 -Wall -Wno-unused-parameter -Wno-reorder -Wno-sign-compare -Wno-address -Wno-noexcept-type -Wno-unknown-attributes -Wno-unknown-warning-option
+CPPFLAGS =
+LDFLAGS  =
+LEXFLAGS = --flex --bison-cc
+PRSFLAGS =
+LIBS     = -lreflex
+
+SRC_DIR   = src
+GEN_DIR   = generated
+BUILD_DIR = build
+PROG      = FFMeta
+
+: foreach $(SRC_DIR)/*.yy                                    |> $(PARSER) $(PRSFLAGS) -b "$(GEN_DIR)/%B" %f                                |> $(GEN_DIR)/%B.tab.cc | $(GEN_DIR)/%B.tab.hh
+: foreach $(SRC_DIR)/*.ll | $(GEN_DIR)/*.hh                  |> $(LEXER) $(LEXFLAGS) --header-file="$(GEN_DIR)/%B.hh" -o %o %f             |> $(GEN_DIR)/%B.yy.cc | $(GEN_DIR)/%B.hh
+: foreach $(GEN_DIR)/*.cc $(SRC_DIR)/*.cpp | $(GEN_DIR)/*.hh |> $(CXX) $(CPPFLAGS) $(CXXFLAGS) -I "$(SRC_DIR)" -I "$(GEN_DIR)" -c %f -o %o |> $(BUILD_DIR)/%B.o
+: $(BUILD_DIR)/*.o                                           |> $(CXX) $(LDFLAGS) %f $(LIBS) -o %o                                         |> $(PROG)
